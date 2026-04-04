@@ -9,10 +9,34 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UniversityRouteImport } from './routes/university'
+import { Route as StudentRouteImport } from './routes/student'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as HrRouteImport } from './routes/hr'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as VTokenRouteImport } from './routes/v/$token'
 import { Route as STokenRouteImport } from './routes/s/$token'
 
+const UniversityRoute = UniversityRouteImport.update({
+  id: '/university',
+  path: '/university',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentRoute = StudentRouteImport.update({
+  id: '/student',
+  path: '/student',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HrRoute = HrRouteImport.update({
+  id: '/hr',
+  path: '/hr',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -31,36 +55,102 @@ const STokenRoute = STokenRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/hr': typeof HrRoute
+  '/login': typeof LoginRoute
+  '/student': typeof StudentRoute
+  '/university': typeof UniversityRoute
   '/s/$token': typeof STokenRoute
   '/v/$token': typeof VTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/hr': typeof HrRoute
+  '/login': typeof LoginRoute
+  '/student': typeof StudentRoute
+  '/university': typeof UniversityRoute
   '/s/$token': typeof STokenRoute
   '/v/$token': typeof VTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/hr': typeof HrRoute
+  '/login': typeof LoginRoute
+  '/student': typeof StudentRoute
+  '/university': typeof UniversityRoute
   '/s/$token': typeof STokenRoute
   '/v/$token': typeof VTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/s/$token' | '/v/$token'
+  fullPaths:
+    | '/'
+    | '/hr'
+    | '/login'
+    | '/student'
+    | '/university'
+    | '/s/$token'
+    | '/v/$token'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/s/$token' | '/v/$token'
-  id: '__root__' | '/' | '/s/$token' | '/v/$token'
+  to:
+    | '/'
+    | '/hr'
+    | '/login'
+    | '/student'
+    | '/university'
+    | '/s/$token'
+    | '/v/$token'
+  id:
+    | '__root__'
+    | '/'
+    | '/hr'
+    | '/login'
+    | '/student'
+    | '/university'
+    | '/s/$token'
+    | '/v/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  HrRoute: typeof HrRoute
+  LoginRoute: typeof LoginRoute
+  StudentRoute: typeof StudentRoute
+  UniversityRoute: typeof UniversityRoute
   STokenRoute: typeof STokenRoute
   VTokenRoute: typeof VTokenRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/university': {
+      id: '/university'
+      path: '/university'
+      fullPath: '/university'
+      preLoaderRoute: typeof UniversityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student': {
+      id: '/student'
+      path: '/student'
+      fullPath: '/student'
+      preLoaderRoute: typeof StudentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hr': {
+      id: '/hr'
+      path: '/hr'
+      fullPath: '/hr'
+      preLoaderRoute: typeof HrRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -87,6 +177,10 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  HrRoute: HrRoute,
+  LoginRoute: LoginRoute,
+  StudentRoute: StudentRoute,
+  UniversityRoute: UniversityRoute,
   STokenRoute: STokenRoute,
   VTokenRoute: VTokenRoute,
 }
