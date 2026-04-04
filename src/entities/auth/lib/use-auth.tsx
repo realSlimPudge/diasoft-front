@@ -15,13 +15,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(() => getStoredUser())
 
   const login = (user: AuthUser, token: string) => {
-    localStorage.setItem('diasoft_access_token', token)
+    document.cookie = `diasoft_token=${encodeURIComponent(token)}; path=/; SameSite=Strict`
     storeUser(user)
     setUser(user)
   }
 
   const logout = () => {
-    localStorage.removeItem('diasoft_access_token')
+    document.cookie = 'diasoft_token=; path=/; max-age=0'
     clearUser()
     setUser(null)
   }
