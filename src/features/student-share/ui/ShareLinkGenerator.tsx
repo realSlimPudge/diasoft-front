@@ -1,18 +1,18 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { Link2, Clock, Copy, Trash2, Loader2 } from 'lucide-react'
+import { motion, AnimatePresence } from 'motion/react'
+import { Link2, Copy, Trash2, Loader2, Clock } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/shared/components/ui/button'
-import { Label } from '@/shared/components/ui/label'
 import { cn } from '@/shared/lib/utils'
 import { studentApi } from '@/entities/student-diploma/api/student.api'
 import type { ShareLinkResponse } from '@/entities/student-diploma/api/dto/student.types'
 
 const TTL_OPTIONS = [
-  { label: '1 час', seconds: 3600 },
-  { label: '24 часа', seconds: 86400 },
-  { label: '7 дней', seconds: 604800 },
-  { label: '30 дней', seconds: 2592000 },
+  { label: '1ч', seconds: 3600 },
+  { label: '24ч', seconds: 86400 },
+  { label: '7д', seconds: 604800 },
+  { label: '30д', seconds: 2592000 },
 ]
 
 export function ShareLinkGenerator() {
@@ -34,82 +34,125 @@ export function ShareLinkGenerator() {
     onError: (err: Error) => toast.error(err.message),
   })
 
-  const copy = () => {
-    if (!link) return
-    navigator.clipboard.writeText(link.shareUrl)
-    toast.success('Ссылка скопирована')
-  }
-
-  const expiresAt = link ? new Date(link.expiresAt) : null
-
   return (
-    <div className="flex flex-col gap-5 rounded-2xl border bg-card p-6">
-      <div className="flex items-center gap-3">
-        <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10">
-          <Link2 size={20} className="text-primary" />
-        </div>
+    <div className="border border-border/40">
+      {/* Header row */}
+      <div className="flex items-center gap-3 border-b border-border/30 px-5 py-4">
+        <Link2 size={13} className="text-primary" />
         <div>
-          <h3 className="font-semibold text-foreground">Поделиться с работодателем</h3>
-          <p className="text-sm text-muted-foreground">Создайте временную ссылку для просмотра вашего диплома</p>
+          <p className="font-mono text-[10px] font-semibold tracking-widest text-foreground uppercase">
+            Поделиться с работодателем
+          </p>
+          <p className="font-mono text-[9px] text-muted-foreground/60">
+            Создайте временную ссылку для просмотра диплома
+          </p>
         </div>
       </div>
 
-      {!link && (
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label>Время действия ссылки</Label>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {TTL_OPTIONS.map(({ label, seconds }) => (
-                <button
-                  key={seconds}
-                  type="button"
-                  onClick={() => setTtl(seconds)}
-                  className={cn(
-                    'rounded-lg border py-2 text-sm font-medium transition-colors',
-                    ttl === seconds
-                      ? 'border-primary bg-primary/5 text-primary'
-                      : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground',
-                  )}
+      <div className="p-5">
+        <AnimatePresence mode="wait">
+          {!link ? (
+            <motion.div
+              key="form"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.3 }}
+              className="flex flex-col gap-4"
+            >
+              {/* TTL selector */}
+              <div className="flex flex-col gap-2">
+                <span className="font-mono text-[9px] tracking-[0.2em] text-muted-foreground/50 uppercase">
+                  Время действия
+                </span>
+                <div className="flex gap-0 border border-border/40">
+                  {TTL_OPTIONS.map(({ label, seconds }, i) => (
+                    <button
+                      key={seconds}
+                      type="button"
+                      onClick={() => setTtl(seconds)}
+                      className={cn(
+                        'flex-1 py-2 font-mono text-xs font-medium tracking-wide transition-colors',
+                        i < TTL_OPTIONS.length - 1 && 'border-r border-border/40',
+                        ttl === seconds
+                          ? 'bg-primary/15 text-primary'
+                          : 'text-muted-foreground hover:bg-muted/20 hover:text-foreground',
+                      )}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <Button
+                onClick={() => generate()}
+                disabled={isPending}
+                className="rounded-none bg-primary font-mono text-[10px] tracking-widest uppercase text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-25"
+              >
+                {isPending ? (
+                  <Loader2 size={12} className="animate-spin" />
+                ) : (
+                  <>
+                    <Link2 size={12} className="mr-2" />
+                    Создать ссылку
+                  </>
+                )}
+              </Button>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="result"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.3 }}
+              className="flex flex-col gap-4"
+            >
+              {/* Link display */}
+              <div className="border border-border/30 bg-muted/10 p-4">
+                <p className="mb-1.5 font-mono text-[9px] tracking-widest text-muted-foreground/50 uppercase">
+                  Ссылка
+                </p>
+                <p className="break-all font-mono text-xs text-foreground">{link.shareUrl}</p>
+              </div>
+
+              {/* Expiry */}
+              <div className="flex items-center gap-2">
+                <Clock size={11} className="text-muted-foreground/50" />
+                <span className="font-mono text-[9px] text-muted-foreground/60">
+                  До{' '}
+                  {new Date(link.expiresAt).toLocaleDateString('ru-RU', {
+                    day: 'numeric', month: 'long', year: 'numeric',
+                  })}
+                </span>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => {
+                    navigator.clipboard.writeText(link.shareUrl)
+                    toast.success('Скопировано')
+                  }}
+                  className="flex-1 rounded-none bg-primary font-mono text-[10px] tracking-widest uppercase text-primary-foreground hover:opacity-90"
                 >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <Button onClick={() => generate()} disabled={isPending}>
-            {isPending ? <Loader2 size={15} className="animate-spin" data-icon="inline-start" /> : <Link2 size={15} data-icon="inline-start" />}
-            {isPending ? 'Создаём ссылку...' : 'Создать ссылку'}
-          </Button>
-        </div>
-      )}
-
-      {link && (
-        <div className="flex flex-col gap-3">
-          <div className="rounded-xl border bg-muted/30 p-4">
-            <p className="text-xs text-muted-foreground mb-2">Ссылка для работодателя</p>
-            <p className="text-sm font-mono break-all text-foreground">{link.shareUrl}</p>
-          </div>
-
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Clock size={13} />
-            <span>
-              Действует до {expiresAt?.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}{' '}
-              {expiresAt?.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
-            </span>
-          </div>
-
-          <div className="flex gap-2">
-            <Button onClick={copy} className="flex-1">
-              <Copy size={14} data-icon="inline-start" />
-              Скопировать ссылку
-            </Button>
-            <Button variant="outline" className="text-destructive hover:text-destructive" onClick={() => revoke()} disabled={isRevoking}>
-              {isRevoking ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-            </Button>
-          </div>
-        </div>
-      )}
+                  <Copy size={12} className="mr-2" />
+                  Скопировать
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => revoke()}
+                  disabled={isRevoking}
+                  className="rounded-none border-border/40 px-3 text-muted-foreground hover:border-red-400/40 hover:text-red-400"
+                >
+                  {isRevoking ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+                </Button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   )
 }

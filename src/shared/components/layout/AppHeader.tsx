@@ -1,14 +1,12 @@
 import { Link } from '@tanstack/react-router'
-import { Shield, GraduationCap, Briefcase, User, LogOut } from 'lucide-react'
-import { Separator } from '@/shared/components/ui/separator'
-import { Button } from '@/shared/components/ui/button'
 import { useAuth } from '@/entities/auth/lib/use-auth'
 import { useRouter } from '@tanstack/react-router'
+import { motion } from 'motion/react'
 
 const roleLinks = {
-  university: { to: '/university', label: 'Кабинет ВУЗа', icon: GraduationCap },
-  student: { to: '/student', label: 'Мой диплом', icon: User },
-  hr: { to: '/hr', label: 'HR-портал', icon: Briefcase },
+  university: { to: '/university', label: 'Кабинет ВУЗа' },
+  student: { to: '/student', label: 'Мой диплом' },
+  hr: { to: '/hr', label: 'HR-портал' },
 } as const
 
 export function AppHeader() {
@@ -21,54 +19,70 @@ export function AppHeader() {
   }
 
   const roleLink = user ? roleLinks[user.role] : null
-  const RoleIcon = roleLink?.icon
 
   return (
-    <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-        <Link to="/" className="flex items-center gap-2 text-foreground hover:text-primary transition-colors">
-          <div className="flex size-7 items-center justify-center rounded-md bg-primary">
-            <Shield size={14} className="text-primary-foreground" />
+    <motion.header
+      className="sticky top-0 z-50"
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-6">
+        {/* Logo */}
+        <Link
+          to="/"
+          className="group flex items-center gap-2.5 text-foreground transition-opacity hover:opacity-70"
+        >
+          <div className="relative flex size-6 items-center justify-center">
+            <div className="absolute inset-0 rounded-sm bg-primary opacity-80" />
+            <div className="absolute inset-[2px] rounded-[2px] bg-background" />
+            <div className="relative size-2 rounded-[1px] bg-primary" />
           </div>
-          <span className="font-semibold tracking-tight">DiaSoft Verify</span>
+          <span className="font-mono text-sm font-semibold tracking-widest uppercase opacity-90">
+            DiaSoft
+          </span>
         </Link>
 
-        <nav className="flex items-center gap-1 text-sm">
+        {/* Nav */}
+        <nav className="flex items-center gap-1">
           <Link
             to="/"
-            className="rounded-md px-3 py-1.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-            activeProps={{ className: 'text-foreground font-medium bg-accent' }}
+            className="px-3 py-1.5 font-mono text-xs tracking-wider text-muted-foreground uppercase transition-colors hover:text-foreground"
+            activeProps={{ className: 'text-foreground' }}
           >
-            Проверить диплом
+            Проверить
           </Link>
 
-          {user && roleLink && RoleIcon && (
+          {user && roleLink && (
             <Link
               to={roleLink.to}
-              className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-              activeProps={{ className: 'text-foreground font-medium bg-accent' }}
+              className="px-3 py-1.5 font-mono text-xs tracking-wider text-muted-foreground uppercase transition-colors hover:text-foreground"
+              activeProps={{ className: 'text-foreground' }}
             >
-              <RoleIcon size={13} />
               {roleLink.label}
             </Link>
           )}
 
           {user ? (
-            <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-1.5 text-muted-foreground">
-              <LogOut size={13} />
+            <button
+              onClick={handleLogout}
+              className="ml-2 px-3 py-1.5 font-mono text-xs tracking-wider text-muted-foreground uppercase transition-colors hover:text-foreground"
+            >
               Выйти
-            </Button>
+            </button>
           ) : (
             <Link
               to="/login"
-              className="rounded-md px-3 py-1.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+              className="ml-2 border border-border px-3 py-1.5 font-mono text-xs tracking-wider text-muted-foreground uppercase transition-colors hover:border-primary hover:text-primary"
             >
               Войти
             </Link>
           )}
         </nav>
       </div>
-      <Separator />
-    </header>
+
+      {/* Thin separator */}
+      <div className="h-px bg-border/40" />
+    </motion.header>
   )
 }

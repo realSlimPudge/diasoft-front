@@ -1,7 +1,6 @@
-import { Upload, List, GraduationCap, LogOut } from 'lucide-react'
+import { motion } from 'motion/react'
+import { Upload, List } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
-import { Button } from '@/shared/components/ui/button'
-import { Separator } from '@/shared/components/ui/separator'
 import { CsvUploader } from '@/features/university-upload/ui/CsvUploader'
 import { DiplomasTable } from '@/features/university-diplomas/ui/DiplomasTable'
 import { useAuth } from '@/entities/auth/lib/use-auth'
@@ -11,64 +10,83 @@ export function UniversityPage() {
   const { user, logout } = useAuth()
   const router = useRouter()
 
-  const handleLogout = () => {
-    logout()
-    router.navigate({ to: '/login' })
-  }
-
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8">
-      {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10">
-            <GraduationCap size={20} className="text-primary" />
-          </div>
-          <div>
-            <h1 className="text-xl font-semibold text-foreground">Кабинет ВУЗа</h1>
-            <p className="text-sm text-muted-foreground">{user?.organizationCode ?? user?.name}</p>
-          </div>
-        </div>
-        <Button variant="outline" size="sm" onClick={handleLogout}>
-          <LogOut size={14} data-icon="inline-start" />
-          Выйти
-        </Button>
+    <div className="relative mx-auto w-full max-w-6xl px-6 py-12">
+
+      {/* Ambient */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+        <div className="absolute -top-20 left-0 h-[400px] w-[400px] rounded-full bg-primary/4 blur-[100px]" />
       </div>
 
-      <Separator className="mb-8" />
+      {/* Header */}
+      <motion.div
+        className="relative mb-12 flex items-end justify-between border-b border-border/30 pb-6"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <div>
+          <p className="mb-2 font-mono text-[9px] tracking-[0.2em] text-muted-foreground/50 uppercase">
+            — Кабинет ВУЗа
+          </p>
+          <h1 className="text-3xl font-black leading-tight tracking-tight text-foreground">
+            РЕЕСТР<br />ДИПЛОМОВ
+          </h1>
+          {(user?.organizationCode ?? user?.name) && (
+            <p className="mt-2 font-mono text-xs text-muted-foreground/60">
+              {user?.organizationCode ?? user?.name}
+            </p>
+          )}
+        </div>
+        <button
+          onClick={() => { logout(); router.navigate({ to: '/login' }) }}
+          className="font-mono text-[10px] tracking-widest text-muted-foreground/50 uppercase transition-colors hover:text-muted-foreground"
+        >
+          Выйти
+        </button>
+      </motion.div>
 
-      <Tabs defaultValue="diplomas">
-        <TabsList className="mb-6">
-          <TabsTrigger value="diplomas">
-            <List size={14} data-icon="inline-start" />
-            Реестр дипломов
-          </TabsTrigger>
-          <TabsTrigger value="upload">
-            <Upload size={14} data-icon="inline-start" />
-            Загрузить реестр
-          </TabsTrigger>
-        </TabsList>
+      {/* Tabs */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <Tabs defaultValue="diplomas">
+          <TabsList className="mb-8 gap-0 rounded-none border border-border/40 bg-transparent p-0">
+            <TabsTrigger
+              value="diplomas"
+              className="rounded-none border-r border-border/40 px-6 py-2.5 font-mono text-[10px] tracking-widest uppercase data-[state=active]:bg-primary/10 data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground"
+            >
+              <List size={12} className="mr-2" />
+              Реестр
+            </TabsTrigger>
+            <TabsTrigger
+              value="upload"
+              className="rounded-none px-6 py-2.5 font-mono text-[10px] tracking-widest uppercase data-[state=active]:bg-primary/10 data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground"
+            >
+              <Upload size={12} className="mr-2" />
+              Загрузить
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="diplomas">
-          <div className="flex flex-col gap-2">
-            <div className="mb-2">
-              <h2 className="text-base font-medium text-foreground">Реестр дипломов</h2>
-              <p className="text-sm text-muted-foreground">Управляйте записями о выданных дипломах</p>
-            </div>
+          <TabsContent value="diplomas" className="mt-0">
+            <p className="mb-6 text-sm text-muted-foreground">
+              Управляйте записями о выданных дипломах
+            </p>
             <DiplomasTable />
-          </div>
-        </TabsContent>
+          </TabsContent>
 
-        <TabsContent value="upload">
-          <div className="mx-auto max-w-xl flex flex-col gap-2">
-            <div className="mb-2">
-              <h2 className="text-base font-medium text-foreground">Загрузка реестра</h2>
-              <p className="text-sm text-muted-foreground">Массовая загрузка данных о дипломах из CSV или Excel файла</p>
+          <TabsContent value="upload" className="mt-0">
+            <div className="mx-auto max-w-xl">
+              <p className="mb-6 text-sm text-muted-foreground">
+                Массовая загрузка данных из CSV или Excel файла
+              </p>
+              <CsvUploader />
             </div>
-            <CsvUploader />
-          </div>
-        </TabsContent>
-      </Tabs>
+          </TabsContent>
+        </Tabs>
+      </motion.div>
     </div>
   )
 }

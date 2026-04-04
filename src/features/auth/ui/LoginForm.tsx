@@ -1,36 +1,27 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useRouter } from '@tanstack/react-router'
-import { GraduationCap, Briefcase, User, Loader2, Eye, EyeOff } from 'lucide-react'
+import { motion, AnimatePresence } from 'motion/react'
+import { Eye, EyeOff, Loader2, ArrowRight } from 'lucide-react'
 import { toast } from 'sonner'
-import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
-import { Label } from '@/shared/components/ui/label'
+import { Button } from '@/shared/components/ui/button'
 import { cn } from '@/shared/lib/utils'
 import { authApi } from '@/entities/auth/api/auth.api'
 import { useAuth } from '@/entities/auth/lib/use-auth'
 import type { UserRole } from '@/entities/auth/model/user'
 
-const roles: { value: UserRole; label: string; description: string; icon: React.ElementType }[] = [
-  {
-    value: 'university',
-    label: 'ВУЗ',
-    description: 'Управление реестром дипломов',
-    icon: GraduationCap,
-  },
-  {
-    value: 'hr',
-    label: 'HR / Работодатель',
-    description: 'Проверка документов кандидатов',
-    icon: Briefcase,
-  },
-  {
-    value: 'student',
-    label: 'Студент / Выпускник',
-    description: 'Доступ к своему диплому',
-    icon: User,
-  },
+const roles: { value: UserRole; label: string; sub: string }[] = [
+  { value: 'university', label: 'ВУЗ', sub: 'Управление реестром' },
+  { value: 'hr', label: 'HR', sub: 'Проверка кандидатов' },
+  { value: 'student', label: 'Студент', sub: 'Мой диплом' },
 ]
+
+const placeholders: Record<UserRole, string> = {
+  university: 'ITMO',
+  hr: 'hr@company.ru',
+  student: 'D-2026-0001',
+}
 
 export function LoginForm() {
   const [role, setRole] = useState<UserRole>('hr')
@@ -51,88 +42,118 @@ export function LoginForm() {
       else if (data.user.role === 'student') router.navigate({ to: '/student' })
       else router.navigate({ to: '/hr' })
     },
-    onError: (err: Error) => {
-      toast.error(err.message)
-    },
+    onError: (err: Error) => toast.error(err.message),
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    mutate()
-  }
-
   return (
-    <div className="flex w-full max-w-md flex-col gap-6">
-      <div className="flex flex-col gap-1 text-center">
-        <h1 className="text-2xl font-bold tracking-tight">Вход в систему</h1>
-        <p className="text-sm text-muted-foreground">DiaSoft — Платформа верификации дипломов</p>
-      </div>
-
+    <div className="flex w-full max-w-sm flex-col gap-8">
       {/* Role selector */}
-      <div className="grid grid-cols-3 gap-2">
-        {roles.map(({ value, label, description, icon: Icon }) => (
-          <button
-            key={value}
-            type="button"
-            onClick={() => setRole(value)}
-            className={cn(
-              'flex flex-col items-center gap-2 rounded-xl border p-3 text-center transition-all hover:border-primary/50 hover:bg-accent',
-              role === value
-                ? 'border-primary bg-primary/5 ring-1 ring-primary'
-                : 'border-border bg-card',
-            )}
-          >
-            <div className={cn('flex size-8 items-center justify-center rounded-lg', role === value ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground')}>
-              <Icon size={16} />
-            </div>
-            <span className={cn('text-xs font-medium leading-tight', role === value ? 'text-foreground' : 'text-muted-foreground')}>{label}</span>
-            <span className="hidden text-[10px] text-muted-foreground sm:block leading-tight">{description}</span>
-          </button>
-        ))}
+      <div className="flex flex-col gap-3">
+        <span className="font-mono text-[9px] tracking-[0.2em] text-muted-foreground/50 uppercase">
+          Роль
+        </span>
+        <div className="grid grid-cols-3 gap-0 border border-border/40">
+          {roles.map(({ value, label, sub }, i) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setRole(value)}
+              className={cn(
+                'relative flex flex-col items-start gap-1 px-4 py-3 text-left transition-all',
+                i < roles.length - 1 && 'border-r border-border/40',
+                role === value
+                  ? 'bg-primary/10 text-foreground'
+                  : 'text-muted-foreground hover:bg-muted/20 hover:text-foreground',
+              )}
+            >
+              {role === value && (
+                <motion.div
+                  layoutId="role-indicator"
+                  className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary"
+                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                />
+              )}
+              <span className="font-mono text-xs font-semibold tracking-wide">{label}</span>
+              <span className="font-mono text-[9px] tracking-wide text-muted-foreground/60 leading-none">
+                {sub}
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="login">
-            {role === 'university' ? 'Код ВУЗа' : role === 'student' ? 'Номер диплома / ФИО' : 'Логин'}
-          </Label>
-          <Input
-            id="login"
-            placeholder={role === 'university' ? 'ITMO' : role === 'student' ? 'D-2026-0001' : 'hr@company.ru'}
-            value={login}
-            onChange={(e) => setLogin(e.target.value)}
-            disabled={isPending}
-            required
-          />
-        </div>
+      {/* Fields */}
+      <form
+        onSubmit={(e) => { e.preventDefault(); mutate() }}
+        className="flex flex-col gap-6"
+      >
+        <label className="flex flex-col gap-2">
+          <span className="font-mono text-[9px] tracking-[0.2em] text-muted-foreground/50 uppercase">
+            {role === 'university' ? 'Код ВУЗа' : role === 'student' ? 'Номер диплома' : 'Логин'}
+          </span>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={role}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Input
+                placeholder={placeholders[role]}
+                value={login}
+                onChange={(e) => setLogin(e.target.value)}
+                disabled={isPending}
+                required
+                className="rounded-none border-0 border-b border-border/50 bg-transparent px-0 py-2.5 text-sm placeholder:text-muted-foreground/30 focus-visible:border-primary focus-visible:ring-0 focus-visible:outline-none transition-colors"
+              />
+            </motion.div>
+          </AnimatePresence>
+        </label>
 
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="password">Пароль</Label>
+        <label className="flex flex-col gap-2">
+          <span className="font-mono text-[9px] tracking-[0.2em] text-muted-foreground/50 uppercase">
+            Пароль
+          </span>
           <div className="relative">
             <Input
-              id="password"
               type={showPassword ? 'text' : 'password'}
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={isPending}
               required
-              className="pr-10"
+              className="rounded-none border-0 border-b border-border/50 bg-transparent px-0 py-2.5 pr-8 text-sm placeholder:text-muted-foreground/30 focus-visible:border-primary focus-visible:ring-0 focus-visible:outline-none transition-colors"
             />
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground/40 hover:text-muted-foreground transition-colors"
             >
-              {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+              {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
             </button>
           </div>
-        </div>
+        </label>
 
-        <Button type="submit" disabled={isPending || !login || !password} className="w-full">
-          {isPending && <Loader2 size={15} className="animate-spin" data-icon="inline-start" />}
-          {isPending ? 'Входим...' : 'Войти'}
-        </Button>
+        <div className="pt-1">
+          <Button
+            type="submit"
+            disabled={isPending || !login || !password}
+            className="group w-full rounded-none bg-primary py-5 font-mono text-xs font-semibold tracking-[0.15em] uppercase text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-25"
+          >
+            {isPending ? (
+              <span className="flex items-center gap-2">
+                <Loader2 size={13} className="animate-spin" />
+                ВХОДИМ...
+              </span>
+            ) : (
+              <span className="flex items-center gap-2">
+                ВОЙТИ
+                <ArrowRight size={13} className="transition-transform group-hover:translate-x-1" />
+              </span>
+            )}
+          </Button>
+        </div>
       </form>
     </div>
   )

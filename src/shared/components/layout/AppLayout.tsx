@@ -2,18 +2,17 @@ import { Outlet } from '@tanstack/react-router'
 import { AppHeader } from './AppHeader'
 import { Toaster } from '@/shared/components/ui/sonner'
 import { AuthProvider } from '@/entities/auth/lib/use-auth'
+import { CursorGlow } from '@/shared/components/ui/cursor-glow'
 
 export function AppLayout() {
   return (
     <AuthProvider>
-      <div className="flex min-h-svh flex-col">
+      <div className="noise-overlay relative flex min-h-svh flex-col">
+        <CursorGlow />
         <AppHeader />
-        <main className="flex-1">
+        <main className="relative z-10 flex-1">
           <Outlet />
         </main>
-        <footer className="border-t py-6 text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()} DiaSoft — Система верификации документов об образовании
-        </footer>
         <Toaster richColors position="top-right" />
       </div>
     </AuthProvider>

@@ -1,15 +1,22 @@
+import { motion } from 'motion/react'
 import { QRCodeSVG } from 'qrcode.react'
-import { Shield, Download } from 'lucide-react'
+import { Download, Shield } from 'lucide-react'
 import { Button } from '@/shared/components/ui/button'
-import { VerdictBadge } from '@/features/verification-result/ui/VerdictBadge'
 import type { StudentDiploma } from '@/entities/student-diploma/api/dto/student.types'
 
 interface DiplomaQrCardProps {
   diploma: StudentDiploma
 }
 
+const statusLabel: Record<StudentDiploma['status'], { text: string; color: string }> = {
+  active: { text: 'ДЕЙСТВИТЕЛЕН', color: 'text-emerald-400' },
+  revoked: { text: 'АННУЛИРОВАН', color: 'text-red-400' },
+  expired: { text: 'ИСТЁК СРОК', color: 'text-amber-400' },
+}
+
 export function DiplomaQrCard({ diploma }: DiplomaQrCardProps) {
   const verifyUrl = `${window.location.origin}/v/${diploma.verificationToken}`
+  const status = statusLabel[diploma.status]
 
   const handleDownload = () => {
     const svg = document.getElementById('diploma-qr-svg')
@@ -22,47 +29,69 @@ export function DiplomaQrCard({ diploma }: DiplomaQrCardProps) {
   }
 
   return (
-    <div className="flex flex-col gap-6 rounded-2xl border bg-card p-6">
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10">
-            <Shield size={20} className="text-primary" />
-          </div>
-          <div>
-            <p className="font-semibold text-foreground">{diploma.diplomaNumber}</p>
-            <p className="text-sm text-muted-foreground">{diploma.universityCode}</p>
-          </div>
-        </div>
-        <VerdictBadge
-          verdict={diploma.status === 'active' ? 'valid' : diploma.status === 'revoked' ? 'revoked' : 'expired'}
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      className="grid grid-cols-1 gap-0 border border-border/40 sm:grid-cols-[200px_1fr]"
+    >
+      {/* QR area */}
+      <div className="flex items-center justify-center border-b border-border/40 bg-white/5 p-8 sm:border-b-0 sm:border-r">
+        <QRCodeSVG
+          id="diploma-qr-svg"
+          value={verifyUrl}
+          size={160}
+          level="H"
+          includeMargin={false}
+          bgColor="transparent"
+          fgColor="oklch(0.97 0 0)"
         />
       </div>
 
-      <div className="flex flex-col items-center gap-4">
-        <div className="rounded-xl border bg-white p-4">
-          <QRCodeSVG
-            id="diploma-qr-svg"
-            value={verifyUrl}
-            size={200}
-            level="H"
-            includeMargin={false}
-          />
+      {/* Info */}
+      <div className="flex flex-col justify-between p-6">
+        <div className="flex flex-col gap-4">
+          {/* Status */}
+          <div className="flex items-center gap-2">
+            <Shield size={12} className={status.color} />
+            <span className={`font-mono text-[10px] font-semibold tracking-widest ${status.color}`}>
+              {status.text}
+            </span>
+          </div>
+
+          {/* Fields */}
+          <dl className="flex flex-col gap-3">
+            <div>
+              <dt className="font-mono text-[9px] tracking-widest text-muted-foreground/50 uppercase">Номер</dt>
+              <dd className="mt-0.5 font-mono text-sm font-semibold">{diploma.diplomaNumber}</dd>
+            </div>
+            <div>
+              <dt className="font-mono text-[9px] tracking-widest text-muted-foreground/50 uppercase">Университет</dt>
+              <dd className="mt-0.5 font-mono text-sm">{diploma.universityCode}</dd>
+            </div>
+            <div>
+              <dt className="font-mono text-[9px] tracking-widest text-muted-foreground/50 uppercase">Программа</dt>
+              <dd className="mt-0.5 text-sm text-muted-foreground">{diploma.program}</dd>
+            </div>
+            <div>
+              <dt className="font-mono text-[9px] tracking-widest text-muted-foreground/50 uppercase">Год выпуска</dt>
+              <dd className="mt-0.5 font-mono text-sm">{diploma.graduationYear}</dd>
+            </div>
+          </dl>
         </div>
-        <div className="text-center">
-          <p className="text-sm font-medium text-foreground">{diploma.program}</p>
-          <p className="text-xs text-muted-foreground">{diploma.graduationYear} год выпуска</p>
+
+        <div className="mt-6">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownload}
+            className="w-full rounded-none border-border/40 font-mono text-[10px] tracking-widest uppercase"
+          >
+            <Download size={12} className="mr-2" />
+            Скачать QR
+          </Button>
         </div>
       </div>
-
-      <div className="rounded-lg bg-muted/50 p-3">
-        <p className="text-xs text-muted-foreground mb-1">Ссылка верификации</p>
-        <p className="text-xs font-mono text-foreground break-all">{verifyUrl}</p>
-      </div>
-
-      <Button variant="outline" onClick={handleDownload}>
-        <Download size={14} data-icon="inline-start" />
-        Скачать QR-код
-      </Button>
-    </div>
+    </motion.div>
   )
 }
