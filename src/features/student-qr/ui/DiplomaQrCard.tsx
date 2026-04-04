@@ -2,13 +2,13 @@ import { motion } from 'motion/react'
 import { QRCodeSVG } from 'qrcode.react'
 import { Download, Shield } from 'lucide-react'
 import { Button } from '@/shared/components/ui/button'
-import type { StudentDiploma } from '@/entities/student-diploma/api/dto/student.types'
+import type { StudentDiploma, DiplomaStatus } from '@/entities/student-diploma/api/dto/student.types'
 
 interface DiplomaQrCardProps {
   diploma: StudentDiploma
 }
 
-const statusLabel: Record<StudentDiploma['status'], { text: string; color: string }> = {
+const statusLabel: Record<DiplomaStatus, { text: string; color: string }> = {
   active: { text: 'ДЕЙСТВИТЕЛЕН', color: 'text-emerald-400' },
   revoked: { text: 'АННУЛИРОВАН', color: 'text-red-400' },
   expired: { text: 'ИСТЁК СРОК', color: 'text-amber-400' },

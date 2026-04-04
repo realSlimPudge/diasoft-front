@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Search, AlertTriangle, QrCode, ChevronDown, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
@@ -11,7 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Label } from '@/shared/components/ui/label'
 import { registryApi } from '@/entities/diploma-registry/api/registry.api'
 import { registryKeys } from '@/entities/diploma-registry/api/registry.keys'
-import type { DiplomaRecord, DiplomaStatus } from '@/entities/diploma-registry/api/dto/registry.types'
+import type { Diploma, DiplomaStatus } from '@/entities/diploma-registry/api/dto/registry.types'
 import { cn } from '@/shared/lib/utils'
 
 const statusBadge: Record<DiplomaStatus, { label: string; className: string }> = {
@@ -23,17 +23,31 @@ const statusBadge: Record<DiplomaStatus, { label: string; className: string }> =
 export function DiplomasTable() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('')
-  const [revokeTarget, setRevokeTarget] = useState<DiplomaRecord | null>(null)
+  const [revokeTarget, setRevokeTarget] = useState<Diploma | null>(null)
   const [revokeReason, setRevokeReason] = useState('')
   const queryClient = useQueryClient()
 
-  const { data, isPending, refetch } = useQuery({
-    queryKey: registryKeys.list({ search, status: statusFilter }),
-    queryFn: () => registryApi.list({ search: search || undefined, status: statusFilter || undefined }),
+  const { data: allDiplomas, isPending, refetch } = useQuery({
+    queryKey: registryKeys.list(),
+    queryFn: () => registryApi.list(),
   })
 
+  const diplomas = useMemo(() => {
+    if (!allDiplomas) return []
+    return allDiplomas.items.filter((d) => {
+      const matchesStatus = !statusFilter || d.status === statusFilter
+      const q = search.toLowerCase()
+      const matchesSearch =
+        !q ||
+        (d.ownerName ?? d.ownerNameMask).toLowerCase().includes(q) ||
+        d.diplomaNumber.toLowerCase().includes(q)
+      return matchesStatus && matchesSearch
+    })
+  }, [allDiplomas, search, statusFilter])
+
   const { mutate: revoke, isPending: isRevoking } = useMutation({
-    mutationFn: (diploma: DiplomaRecord) => registryApi.revoke({ diplomaId: diploma.id, reason: revokeReason }),
+    mutationFn: (diploma: Diploma) =>
+      registryApi.revoke(diploma.id, { reason: revokeReason }),
     onSuccess: () => {
       toast.success('Диплом аннулирован')
       queryClient.invalidateQueries({ queryKey: registryKeys.list() })
@@ -97,14 +111,18 @@ export function DiplomasTable() {
                     ))}
                   </TableRow>
                 ))
-              : data?.items.map((diploma) => {
+              : diplomas.map((diploma) => {
                   const badge = statusBadge[diploma.status]
                   return (
                     <TableRow key={diploma.id}>
-                      <TableCell className="font-medium">{diploma.ownerName}</TableCell>
+                      <TableCell className="font-medium">
+                        {diploma.ownerName ?? diploma.ownerNameMask}
+                      </TableCell>
                       <TableCell className="font-mono text-sm">{diploma.diplomaNumber}</TableCell>
-                      <TableCell className="max-w-48 truncate text-sm text-muted-foreground">{diploma.program}</TableCell>
-                      <TableCell className="text-sm">{diploma.graduationYear}</TableCell>
+                      <TableCell className="max-w-48 truncate text-sm text-muted-foreground">
+                        {diploma.program}
+                      </TableCell>
+                      <TableCell className="text-sm">{diploma.graduationYear ?? '—'}</TableCell>
                       <TableCell>
                         <span className={cn('inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium', badge.className)}>
                           {badge.label}
@@ -112,14 +130,16 @@ export function DiplomasTable() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => window.open(`/v/${diploma.verificationToken}`, '_blank')}
-                          >
-                            <QrCode size={13} data-icon="inline-start" />
-                            QR
-                          </Button>
+                          {diploma.verificationToken && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => window.open(`/v/${diploma.verificationToken}`, '_blank')}
+                            >
+                              <QrCode size={13} data-icon="inline-start" />
+                              QR
+                            </Button>
+                          )}
                           {diploma.status === 'active' && (
                             <Button
                               variant="ghost"
@@ -137,7 +157,7 @@ export function DiplomasTable() {
                   )
                 })}
 
-            {!isPending && data?.items.length === 0 && (
+            {!isPending && diplomas.length === 0 && (
               <TableRow>
                 <TableCell colSpan={6} className="py-12 text-center text-muted-foreground">
                   Дипломы не найдены
@@ -148,9 +168,9 @@ export function DiplomasTable() {
         </Table>
       </div>
 
-      {data && (
+      {allDiplomas && (
         <p className="text-xs text-muted-foreground">
-          Показано {data.items.length} из {data.total} записей
+          Показано {diplomas.length} из {allDiplomas.total} записей
         </p>
       )}
 
@@ -162,8 +182,10 @@ export function DiplomasTable() {
           </DialogHeader>
           <div className="flex flex-col gap-4">
             <div className="rounded-lg border bg-muted/50 p-3 text-sm">
-              <p className="font-medium">{revokeTarget?.ownerName}</p>
-              <p className="text-muted-foreground">{revokeTarget?.diplomaNumber} · {revokeTarget?.program}</p>
+              <p className="font-medium">{revokeTarget?.ownerName ?? revokeTarget?.ownerNameMask}</p>
+              <p className="text-muted-foreground">
+                {revokeTarget?.diplomaNumber} · {revokeTarget?.program}
+              </p>
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="reason">Причина аннулирования</Label>

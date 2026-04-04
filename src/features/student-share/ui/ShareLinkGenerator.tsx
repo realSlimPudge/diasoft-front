@@ -6,9 +6,9 @@ import { toast } from 'sonner'
 import { Button } from '@/shared/components/ui/button'
 import { cn } from '@/shared/lib/utils'
 import { studentApi } from '@/entities/student-diploma/api/student.api'
-import type { ShareLinkResponse } from '@/entities/student-diploma/api/dto/student.types'
+import type { ShareLinkResponse, ShareLinkRequest } from '@/entities/student-diploma/api/dto/student.types'
 
-const TTL_OPTIONS = [
+const TTL_OPTIONS: { label: string; seconds: ShareLinkRequest['ttlSeconds'] }[] = [
   { label: '1ч', seconds: 3600 },
   { label: '24ч', seconds: 86400 },
   { label: '7д', seconds: 604800 },
@@ -16,11 +16,11 @@ const TTL_OPTIONS = [
 ]
 
 export function ShareLinkGenerator() {
-  const [ttl, setTtl] = useState(86400)
+  const [ttl, setTtl] = useState<ShareLinkRequest['ttlSeconds']>(86400)
   const [link, setLink] = useState<ShareLinkResponse | null>(null)
 
   const { mutate: generate, isPending } = useMutation({
-    mutationFn: () => studentApi.generateShareLink(ttl),
+    mutationFn: () => studentApi.generateShareLink({ ttlSeconds: ttl }),
     onSuccess: (data) => setLink(data),
     onError: (err: Error) => toast.error(err.message),
   })

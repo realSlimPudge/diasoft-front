@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query'
-import { queryOptions } from '@tanstack/react-query'
 import { motion } from 'motion/react'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/shared/components/ui/alert'
@@ -9,16 +8,15 @@ import { studentApi } from '@/entities/student-diploma/api/student.api'
 import { useAuth } from '@/entities/auth/lib/use-auth'
 import { useRouter } from '@tanstack/react-router'
 
-const myDiplomaOptions = queryOptions({
-  queryKey: ['student', 'diploma'],
-  queryFn: () => studentApi.myDiploma(),
-  staleTime: 1000 * 60 * 10,
-})
-
 export function StudentPage() {
   const { user, logout } = useAuth()
   const router = useRouter()
-  const { data: diploma, isPending, isError, error } = useQuery(myDiplomaOptions)
+
+  const { data: diploma, isPending, isError, error } = useQuery({
+    queryKey: ['student', 'diploma'],
+    queryFn: () => studentApi.myDiploma(),
+    staleTime: 1000 * 60 * 10,
+  })
 
   return (
     <div className="relative mx-auto w-full max-w-3xl px-6 py-12">

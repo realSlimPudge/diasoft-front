@@ -6,8 +6,13 @@ export const apiClient = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
+function getTokenCookie(): string | null {
+  const match = document.cookie.match(/(?:^|;\s*)diasoft_token=([^;]+)/)
+  return match ? decodeURIComponent(match[1]) : null
+}
+
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('diasoft_access_token')
+  const token = getTokenCookie()
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
