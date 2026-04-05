@@ -84,7 +84,7 @@ export function CsvUploader() {
   const isDone = job && TERMINAL.has(job.status)
 
   const downloadTemplate = () => {
-    const header = 'student_external_id,full_name,diploma_number,program_name'
+    const header = 'student_external_id,full_name,diploma_number,program_name,graduation_year'
     const blob = new Blob([header + '\n'], { type: 'text/csv;charset=utf-8;' })
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
@@ -213,17 +213,27 @@ export function CsvUploader() {
           <div>
             <p className="mb-1.5 text-xs font-medium text-foreground">Формат CSV:</p>
             <p className="font-mono text-[11px] text-muted-foreground">
-              student_external_id, full_name, diploma_number, program_name
+              student_external_id, full_name, diploma_number, program_name, graduation_year
             </p>
           </div>
-          <button
-            type="button"
-            onClick={downloadTemplate}
-            className="flex shrink-0 items-center gap-1.5 font-mono text-[9px] tracking-widest text-muted-foreground/60 uppercase transition-colors hover:text-primary"
-          >
-            <Download size={11} />
-            Шаблон
-          </button>
+          <div className="flex shrink-0 flex-col items-end gap-2">
+            <button
+              type="button"
+              onClick={downloadTemplate}
+              className="flex items-center gap-1.5 font-mono text-[9px] tracking-widest text-muted-foreground/60 uppercase transition-colors hover:text-primary"
+            >
+              <Download size={11} />
+              Шаблон
+            </button>
+            <a
+              href="/diplomas-sample.csv"
+              download
+              className="flex items-center gap-1.5 font-mono text-[9px] tracking-widest text-muted-foreground/40 uppercase transition-colors hover:text-primary"
+            >
+              <Download size={11} />
+              Пример (100 строк)
+            </a>
+          </div>
         </div>
       )}
     </div>

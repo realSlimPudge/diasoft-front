@@ -18,6 +18,13 @@ export interface Diploma {
   revokeReason: string | null
 }
 
+export interface DiplomaListParams {
+  page?: number
+  search?: string
+  status?: DiplomaStatus | ''
+  year?: number
+}
+
 export interface DiplomaListResponse {
   items: Diploma[]
   total: number

@@ -1,5 +1,6 @@
 import { apiClient } from '@/shared/api/api-client'
 import type {
+  DiplomaListParams,
   DiplomaListResponse,
   GatewayImportAccepted,
   GatewayImportStatus,
@@ -9,7 +10,7 @@ import type {
 } from './dto/registry.types'
 
 export const registryApi = {
-  list: (params?: { search?: string; status?: string; page?: number }) =>
+  list: (params?: DiplomaListParams) =>
     apiClient
       .get<DiplomaListResponse>('/api/v1/university/diplomas', { params })
       .then((r) => r.data),

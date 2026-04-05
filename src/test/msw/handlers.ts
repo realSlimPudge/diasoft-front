@@ -121,7 +121,7 @@ export const handlers = [
     return HttpResponse.json({ error: 'Not found' }, { status: 404 })
   }),
 
-  // University diplomas
+  // University diplomas (page-based)
   http.get(`${BASE}/api/v1/university/diplomas`, () =>
     HttpResponse.json({ items: [fixtures.diploma], total: 1 }),
   ),
