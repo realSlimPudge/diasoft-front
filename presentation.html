@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>input math — DiplomVerify</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #070707;
+      --s1: #0f0f0f;
+      --border: #1a1a1a;
+      --border2: #252525;
+      --text: #f0f0f0;
+      --muted: #666;
+      --dim: #333;
+      --purple: #8b5cf6;
+      --blue: #3b82f6;
+      --cyan: #06b6d4;
+      --green: #10b981;
+      --orange: #f97316;
+      --red: #ef4444;
+      --yellow: #eab308;
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ====== SLIDE SYSTEM ====== */
+    .slides { position: relative; width: 100vw; height: 100vh; }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 3rem 5.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.4s cubic-bezier(.4,0,.2,1), transform 0.4s cubic-bezier(.4,0,.2,1);
+      pointer-events: none;
+    }
+    .slide.active { opacity: 1; transform: translateY(0); pointer-events: all; }
+    .slide.exit { opacity: 0; transform: translateY(-20px); transition-duration: 0.25s; }
+
+    /* ====== NAV ====== */
+    .nav { position: fixed; bottom: 1.6rem; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; z-index: 100; align-items: center; }
+    .dot { width: 5px; height: 5px; border-radius: 50%; background: #222; cursor: pointer; transition: all 0.28s; }
+    .dot.active { background: #ddd; width: 20px; border-radius: 3px; }
+    .counter { position: fixed; top: 1.6rem; right: 2rem; font-size: 0.7rem; color: #2a2a2a; font-variant-numeric: tabular-nums; }
+    .hint { position: fixed; bottom: 1.45rem; right: 2rem; font-size: 0.62rem; color: #1f1f1f; }
+
+    /* ====== TYPE ====== */
+    .eye { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--purple); margin-bottom: 1rem; }
+    .t-hero { font-size: clamp(4.5rem, 10vw, 7.5rem); font-weight: 900; letter-spacing: -0.055em; line-height: 0.88; }
+    .t-xl { font-size: clamp(2.25rem, 4.5vw, 3.5rem); font-weight: 800; letter-spacing: -0.035em; line-height: 1.02; }
+    .t-lg { font-size: clamp(1.5rem, 2.8vw, 2.25rem); font-weight: 700; letter-spacing: -0.025em; }
+    .sub { font-size: clamp(0.85rem, 1.3vw, 1rem); color: var(--muted); line-height: 1.7; }
+
+    .grad { background: linear-gradient(120deg,#8b5cf6,#3b82f6,#06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .grad2 { background: linear-gradient(120deg,#10b981,#06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .grad3 { background: linear-gradient(120deg,#f97316,#eab308); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+    /* ====== UTILS ====== */
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 3.5rem; align-items: center; }
+    .card { border: 1px solid var(--border); border-radius: 14px; background: rgba(255,255,255,0.02); transition: border-color 0.2s; }
+    .card:hover { border-color: var(--border2); }
+
+    img.icon { object-fit: contain; display: block; }
+    img.icon[src=""] { display: none; }
+
+    /* ====== SLIDE 1 — HERO ====== */
+    #s1 { overflow: hidden; }
+    #s1::before {
+      content: '';
+      position: absolute;
+      top: -50%; right: -15%;
+      width: 70vw; height: 70vw;
+      background: radial-gradient(circle, rgba(139,92,246,0.11) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    #s1::after {
+      content: '';
+      position: absolute;
+      bottom: -30%; left: -10%;
+      width: 50vw; height: 50vw;
+      background: radial-gradient(circle, rgba(6,182,212,0.07) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .hero-wrap { position: relative; z-index: 1; }
+
+    .team-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.3rem 0.875rem;
+      border: 1px solid rgba(139,92,246,0.3);
+      border-radius: 100px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #a78bfa;
+      background: rgba(139,92,246,0.08);
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.02em;
+    }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.25rem 0.625rem;
+      border: 1px solid rgba(16,185,129,0.3);
+      border-radius: 100px;
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: #34d399;
+      background: rgba(16,185,129,0.08);
+    }
+
+    .live-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #10b981;
+      animation: pulse 2s ease infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(0.85); }
+    }
+
+    .hero-badges {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 1.75rem;
+      align-items: center;
+    }
+
+    .hb {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.25rem 0.65rem;
+      border: 1px solid #1c1c1c;
+      border-radius: 100px;
+      font-size: 0.7rem;
+      color: #444;
+      background: rgba(255,255,255,0.02);
+    }
+    .hb img { width: 12px; height: 12px; object-fit: contain; }
+
+    /* ====== SLIDE 2 — ПРОБЛЕМА ====== */
+    .pain-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.25rem;
+      margin-top: 2rem;
+    }
+
+    .pain-card {
+      padding: 1.75rem 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.018);
+      display: flex;
+      flex-direction: column;
+      gap: 0.875rem;
+    }
+
+    .pain-icon { font-size: 2rem; }
+    .pain-who { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+    .pain-title { font-size: 1.05rem; font-weight: 700; line-height: 1.25; }
+    .pain-desc { font-size: 0.8rem; color: var(--muted); line-height: 1.65; }
+
+    /* ====== SLIDE 3 — РЕШЕНИЕ ====== */
+    .solution-flow {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      margin-top: 2.25rem;
+    }
+
+    .sol-step {
+      flex: 1;
+      padding: 1.5rem 1.375rem;
+      border: 1px solid var(--border);
+      border-radius: 0;
+      background: rgba(255,255,255,0.018);
+      position: relative;
+    }
+    .sol-step:first-child { border-radius: 16px 0 0 16px; }
+    .sol-step:last-child { border-radius: 0 16px 16px 0; }
+    .sol-step + .sol-step { border-left: none; }
+
+    .sol-num {
+      font-size: 2.25rem;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-bottom: 0.75rem;
+    }
+
+    .sol-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .sol-desc { font-size: 0.78rem; color: var(--muted); line-height: 1.65; }
+
+    .benefits {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    .benefit {
+      padding: 0.875rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.015);
+      display: flex;
+      align-items: flex-start;
+      gap: 0.625rem;
+    }
+
+    .benefit-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 0.05rem; }
+    .benefit-text { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+    .benefit-text strong { color: var(--text); font-weight: 600; display: block; margin-bottom: 0.15rem; }
+
+    /* ====== SLIDE 4 — АРХИТЕКТУРА ====== */
+    .arch-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: 1.75rem;
+    }
+
+    .arch-top {
+      display: grid;
+      grid-template-columns: 2fr 0.5fr 2fr 0.5fr 2fr 0.5fr 2fr;
+      gap: 0;
+      align-items: center;
+    }
+
+    .arch-node {
+      padding: 1.25rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.02);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .arch-node.highlight { border-color: rgba(139,92,246,0.35); background: rgba(139,92,246,0.06); }
+    .arch-node.highlight2 { border-color: rgba(0,173,216,0.35); background: rgba(0,173,216,0.06); }
+    .arch-node.highlight3 { border-color: rgba(97,218,251,0.25); background: rgba(97,218,251,0.05); }
+    .arch-node.highlight4 { border-color: rgba(59,130,246,0.3); background: rgba(59,130,246,0.05); }
+
+    .arch-node img { width: 28px; height: 28px; object-fit: contain; }
+    .arch-node-title { font-size: 0.8rem; font-weight: 700; }
+    .arch-node-sub { font-size: 0.65rem; color: var(--muted); }
+
+    .arch-arrow-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+      padding: 0 0.25rem;
+    }
+    .arch-arrow-icon { color: #222; font-size: 1.2rem; }
+    .arch-arrow-lbl { font-size: 0.58rem; color: #2a2a2a; text-align: center; }
+
+    .arch-bottom {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .arch-infra {
+      padding: 0.875rem 1.125rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.015);
+      display: flex;
+      align-items: center;
+      gap: 0.875rem;
+    }
+
+    .arch-infra-logos { display: flex; gap: 0.5rem; align-items: center; }
+    .arch-infra-logos img { width: 20px; height: 20px; object-fit: contain; }
+    .arch-infra-info { }
+    .arch-infra-title { font-size: 0.8rem; font-weight: 700; }
+    .arch-infra-sub { font-size: 0.68rem; color: var(--muted); margin-top: 0.1rem; }
+
+    /* ====== SLIDE 5 — СТЭК ====== */
+    .stack-sections {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.25rem;
+      margin-top: 2rem;
+    }
+
+    .stack-section { }
+    .stack-section-title {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+      padding-left: 0.25rem;
+    }
+
+    .stack-logos {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .stack-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.625rem 0.875rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.018);
+      transition: all 0.2s;
+    }
+    .stack-item:hover { border-color: var(--border2); transform: translateX(3px); }
+
+    .stack-item img { width: 22px; height: 22px; object-fit: contain; flex-shrink: 0; }
+    .stack-item-txt { }
+    .stack-item-name { font-size: 0.82rem; font-weight: 600; }
+    .stack-item-role { font-size: 0.65rem; color: var(--muted); margin-top: 0.1rem; }
+
+    .txt-logo-sm {
+      width: 22px; height: 22px;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.42rem;
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+
+    /* ====== SLIDE 6 — ПУТЬ ДИПЛОМА ====== */
+    .flow {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-top: 2.5rem;
+    }
+
+    .flow-step {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .flow-circle {
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 0.875rem;
+      border: 1px solid;
+      flex-shrink: 0;
+    }
+
+    .flow-title { font-size: 0.82rem; font-weight: 700; margin-bottom: 0.35rem; }
+    .flow-desc { font-size: 0.68rem; color: var(--muted); line-height: 1.55; max-width: 130px; }
+
+    .flow-arrow {
+      color: var(--dim);
+      font-size: 1.5rem;
+      flex-shrink: 0;
+      margin-bottom: 1.75rem;
+      padding: 0 0.25rem;
+    }
+
+    .flow-detail {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.75rem;
+      margin-top: 1.75rem;
+    }
+
+    .flow-detail-card {
+      padding: 0.875rem 0.875rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.015);
+    }
+
+    .fd-title { font-size: 0.72rem; font-weight: 700; margin-bottom: 0.375rem; }
+    .fd-list { list-style: none; display: flex; flex-direction: column; gap: 0.2rem; }
+    .fd-list li { font-size: 0.65rem; color: var(--muted); display: flex; gap: 0.35rem; }
+    .fd-list li::before { content: '·'; color: #333; flex-shrink: 0; }
+
+    /* ====== SLIDE 7 — ЧТО РАБОТАЕТ ====== */
+    .done-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.875rem;
+      margin-top: 1.75rem;
+    }
+
+    .done-card {
+      padding: 1.25rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.018);
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .done-head { display: flex; align-items: center; gap: 0.625rem; }
+    .done-ico { font-size: 1.1rem; }
+    .done-title { font-size: 0.87rem; font-weight: 700; }
+    .done-list { list-style: none; display: flex; flex-direction: column; gap: 0.275rem; }
+    .done-list li { font-size: 0.72rem; color: var(--muted); display: flex; align-items: flex-start; gap: 0.45rem; line-height: 1.4; }
+    .done-list li::before { content: '✓'; color: var(--green); font-size: 0.65rem; flex-shrink: 0; margin-top: 0.1rem; font-weight: 700; }
+
+    /* ====== SLIDE 8 — МАСШТАБ ====== */
+    .scale-numbers {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .scale-num-card {
+      padding: 1.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.018);
+      text-align: center;
+    }
+
+    .scale-num {
+      font-size: clamp(2rem, 3.5vw, 2.75rem);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-bottom: 0.4rem;
+    }
+
+    .scale-label { font-size: 0.75rem; color: var(--muted); line-height: 1.5; }
+
+    .scale-arch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.875rem;
+      margin-top: 1.25rem;
+    }
+
+    .scale-detail {
+      padding: 1.125rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.015);
+    }
+
+    .sd-title { font-size: 0.82rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .sd-list { list-style: none; display: flex; flex-direction: column; gap: 0.3rem; }
+    .sd-list li { font-size: 0.73rem; color: var(--muted); display: flex; gap: 0.5rem; }
+    .sd-list li::before { content: '→'; color: #2a2a2a; }
+
+    /* ====== SLIDE 9 — ДОВЕРИЕ ====== */
+    .trust-grid {
+      display: grid;
+      grid-template-columns: 1fr 0.2fr 1fr;
+      gap: 0;
+      align-items: center;
+      margin-top: 2.25rem;
+    }
+
+    .trust-col { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    .trust-card {
+      padding: 1.125rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.018);
+    }
+
+    .trust-card.target { border-color: rgba(139,92,246,0.3); background: rgba(139,92,246,0.06); }
+
+    .trust-card-title { font-size: 0.8rem; font-weight: 700; margin-bottom: 0.375rem; }
+    .trust-card-desc { font-size: 0.73rem; color: var(--muted); line-height: 1.6; }
+
+    .trust-divider {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .trust-arrow { font-size: 2rem; color: #1a1a1a; }
+    .trust-arrow-lbl { font-size: 0.6rem; color: #2a2a2a; text-align: center; }
+
+    .trust-col-head {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.25rem;
+    }
+
+    /* ====== SLIDE 10 — ДЕМО ====== */
+    .demo-flow {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-top: 2rem;
+    }
+
+    .demo-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 1.25rem;
+      padding: 1rem 1.375rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.018);
+      transition: border-color 0.2s;
+    }
+    .demo-step:hover { border-color: var(--border2); }
+
+    .demo-step-num {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .demo-step-title { font-size: 0.88rem; font-weight: 700; margin-bottom: 0.2rem; }
+    .demo-step-desc { font-size: 0.75rem; color: var(--muted); line-height: 1.55; }
+
+    .demo-url {
+      display: inline-block;
+      margin-top: 1.5rem;
+      padding: 0.5rem 1rem;
+      border: 1px solid rgba(16,185,129,0.25);
+      border-radius: 8px;
+      background: rgba(16,185,129,0.06);
+      font-family: 'Courier New', monospace;
+      font-size: 0.75rem;
+      color: #34d399;
+    }
+
+    /* ====== SLIDE 11 — ИТОГ ====== */
+    .final-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center; height: 100%; }
+
+    .result-list { list-style: none; display: flex; flex-direction: column; gap: 0.875rem; margin-top: 1.75rem; }
+    .result-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.875rem;
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .result-list li .r-icon { font-size: 1rem; flex-shrink: 0; margin-top: 0.05rem; }
+    .result-list li strong { color: var(--text); font-weight: 600; }
+
+    .final-repo-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.625rem;
+      margin-top: 1.25rem;
+    }
+
+    .repo-item {
+      padding: 0.875rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.018);
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+    }
+
+    .repo-item img { width: 18px; height: 18px; object-fit: contain; flex-shrink: 0; }
+    .repo-item-name { font-size: 0.8rem; font-weight: 600; }
+    .repo-item-lang { font-size: 0.65rem; color: var(--muted); }
+
+    @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .spin { animation: spin-slow 12s linear infinite; }
+  </style>
+</head>
+<body>
+<div class="slides">
+
+  <!-- ========== SLIDE 1: HERO ========== -->
+  <section class="slide active" id="s1">
+    <div class="hero-wrap">
+      <div class="team-label">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <circle cx="6" cy="6" r="5" stroke="#a78bfa" stroke-width="1.2"/>
+          <path d="M3.5 6h5M6 3.5v5" stroke="#a78bfa" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        команда input math
+      </div>
+
+      <h1 class="t-hero">
+        <span class="grad">input</span>&nbsp;math
+      </h1>
+
+      <div style="margin-top: 1rem; font-size: clamp(1.05rem, 2vw, 1.45rem); color: #555; font-weight: 400; letter-spacing: -0.01em;">
+        Платформа цифровой верификации дипломов
+      </div>
+
+      <div style="margin-top: 0.625rem; font-size: 0.88rem; color: #333;">
+        DiplomVerify — от загрузки реестра до проверки работодателем
+      </div>
+
+      <div class="hero-badges" style="margin-top: 1.5rem;">
+        <div class="live-badge">
+          <div class="live-dot"></div>
+          live · web.team1.213.165.211.103.sslip.io
+        </div>
+        <div class="hb"><img src="https://cdn.simpleicons.org/go/00ADD8" alt="Go"> diasoft-gateway</div>
+        <div class="hb"><img src="https://cdn.simpleicons.org/spring/6DB33F" alt="Spring"> diasoft-registry</div>
+        <div class="hb"><img src="https://cdn.simpleicons.org/react/61DAFB" alt="React"> diasoft-front</div>
+        <div class="hb"><img src="https://cdn.simpleicons.org/kubernetes/326CE5" alt="K8s"> platform-infra</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SLIDE 2: ПРОБЛЕМА ========== -->
+  <section class="slide" id="s2">
+    <div class="eye">Проблема</div>
+    <h2 class="t-xl">Верификация диплома<br>сегодня — это боль</h2>
+
+    <div class="pain-grid">
+      <div class="pain-card" style="border-color:rgba(239,68,68,0.2);background:rgba(239,68,68,0.04)">
+        <div class="pain-icon">💼</div>
+        <div class="pain-who">Работодатель</div>
+        <div class="pain-title">Нет быстрого<br>способа проверить</div>
+        <div class="pain-desc">
+          Звонки в ВУЗ, бумажные запросы, долгое ожидание. Невозможно понять — настоящий ли диплом, не был ли он отозван.
+        </div>
+      </div>
+
+      <div class="pain-card" style="border-color:rgba(245,158,11,0.2);background:rgba(245,158,11,0.04)">
+        <div class="pain-icon">🏛️</div>
+        <div class="pain-who">ВУЗ</div>
+        <div class="pain-title">Нет управляемого<br>цифрового реестра</div>
+        <div class="pain-desc">
+          Таблицы в Excel, разрозненные базы. Нет инструментов для массовой загрузки, отзыва дипломов и выдачи QR-кодов.
+        </div>
+      </div>
+
+      <div class="pain-card" style="border-color:rgba(59,130,246,0.2);background:rgba(59,130,246,0.04)">
+        <div class="pain-icon">🎓</div>
+        <div class="pain-who">Студент</div>
+        <div class="pain-title">Нет удобного<br>способа подтвердить</div>
+        <div class="pain-desc">
+          Каждый раз нужно вручную пересылать сканы, носить документы, объяснять работодателю. Нет цифрового подтверждения.
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 2rem; padding: 1.125rem 1.5rem; border: 1px solid rgba(139,92,246,0.2); border-radius: 12px; background: rgba(139,92,246,0.05);">
+      <span style="font-size: 0.85rem; color: #a78bfa; font-weight: 600;">Наш ответ:</span>
+      <span style="font-size: 0.85rem; color: var(--muted); margin-left: 0.75rem;">единый цифровой путь — от реестра ВУЗа до мгновенной проверки работодателем</span>
+    </div>
+  </section>
+
+  <!-- ========== SLIDE 3: РЕШЕНИЕ ========== -->
+  <section class="slide" id="s3">
+    <div class="eye">Наше решение</div>
+    <h2 class="t-xl">Единый путь для трёх участников</h2>
+
+    <div class="solution-flow">
+      <div class="sol-step">
+        <div class="sol-num" style="color:#8b5cf6">01</div>
+        <div class="sol-title">🏛️ ВУЗ загружает реестр</div>
+        <div class="sol-desc">CSV или XLSX файл с дипломами. Система принимает, проверяет, обрабатывает асинхронно. Видны ошибки по строкам.</div>
+      </div>
+      <div class="sol-step">
+        <div class="sol-num" style="color:#3b82f6">02</div>
+        <div class="sol-title">🎓 Студент получает доступ</div>
+        <div class="sol-desc">QR-код для своего диплома. Временные share-ссылки для работодателей — с TTL от 1 часа до 30 дней.</div>
+      </div>
+      <div class="sol-step">
+        <div class="sol-num" style="color:#06b6d4">03</div>
+        <div class="sol-title">💼 Работодатель проверяет</div>
+        <div class="sol-desc">Форма, QR-сканер или прямая ссылка. Мгновенный ответ: valid / revoked / expired. Без авторизации.</div>
+      </div>
+      <div class="sol-step">
+        <div class="sol-num" style="color:#10b981">04</div>
+        <div class="sol-title">⚡ Публично и быстро</div>
+        <div class="sol-desc">Проверка через Redis-кэш. Публичный контур не нагружает внутренний реестр. Работает на миллионах дипломов.</div>
+      </div>
+    </div>
+
+    <div class="benefits">
+      <div class="benefit">
+        <div class="benefit-icon">🔒</div>
+        <div class="benefit-text"><strong>Отзыв сразу виден</strong>Аннулированный диплом — verdict revoked везде</div>
+      </div>
+      <div class="benefit">
+        <div class="benefit-icon">📱</div>
+        <div class="benefit-text"><strong>QR + короткие ссылки</strong>Проверка в один шаг с телефона</div>
+      </div>
+      <div class="benefit">
+        <div class="benefit-icon">📦</div>
+        <div class="benefit-text"><strong>Массовый импорт</strong>10 000 строк в одном файле, 64 МБ</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SLIDE 4: АРХИТЕКТУРА ========== -->
+  <section class="slide" id="s4">
+    <div class="eye">Архитектура системы</div>
+    <h2 class="t-xl">4 независимых компонента</h2>
+
+    <div class="arch-wrap">
+      <div class="arch-top">
+        <!-- diasoft-front -->
+        <div class="arch-node highlight3">
+          <img src="https://cdn.simpleicons.org/react/61DAFB" alt="React" class="spin">
+          <div class="arch-node-title">diasoft-front</div>
+          <div class="arch-node-sub">React 19 + Vite</div>
+          <div class="arch-node-sub">TypeScript + Tailwind</div>
+        </div>
+
+        <div class="arch-arrow-col">
+          <div class="arch-arrow-icon">⇄</div>
+          <div class="arch-arrow-lbl">HTTPS<br>JWT Bearer</div>
+        </div>
+
+        <!-- diasoft-gateway -->
+        <div class="arch-node highlight2">
+          <img src="https://cdn.simpleicons.org/go/00ADD8" alt="Go">
+          <div class="arch-node-title">diasoft-gateway</div>
+          <div class="arch-node-sub">Go · Public API</div>
+          <div class="arch-node-sub">JWT · Redis · Swagger</div>
+        </div>
+
+        <div class="arch-arrow-col">
+          <div class="arch-arrow-icon">⇄</div>
+          <div class="arch-arrow-lbl">Internal<br>Service Auth</div>
+        </div>
+
+        <!-- diasoft-registry -->
+        <div class="arch-node highlight">
+          <img src="https://cdn.simpleicons.org/spring/6DB33F" alt="Spring">
+          <div class="arch-node-title">diasoft-registry</div>
+          <div class="arch-node-sub">Spring Boot · Source of Truth</div>
+          <div class="arch-node-sub">PostgreSQL · S3 · Outbox</div>
+        </div>
+
+        <div class="arch-arrow-col">
+          <div class="arch-arrow-icon">⇄</div>
+          <div class="arch-arrow-lbl">Kafka<br>Events</div>
+        </div>
+
+        <!-- platform-infra -->
+        <div class="arch-node highlight4">
+          <img src="https://cdn.simpleicons.org/kubernetes/326CE5" alt="K8s">
+          <div class="arch-node-title">platform-infra</div>
+          <div class="arch-node-sub">Helm + ArgoCD</div>
+          <div class="arch-node-sub">Terraform · GitHub Actions</div>
+        </div>
+      </div>
+
+      <div class="arch-bottom">
+        <div class="arch-infra">
+          <div class="arch-infra-logos">
+            <img src="https://cdn.simpleicons.org/redis/FF4438" alt="Redis">
+            <img src="https://cdn.simpleicons.org/apachekafka/ffffff" alt="Kafka">
+            <img src="https://cdn.simpleicons.org/postgresql/4169E1" alt="PostgreSQL">
+          </div>
+          <div class="arch-infra-info">
+            <div class="arch-infra-title">Инфраструктура данных</div>
+            <div class="arch-infra-sub">Redis (кэш верификации) · Kafka (event-driven outbox) · PostgreSQL (источник правды)</div>
+          </div>
+        </div>
+        <div class="arch-infra">
+          <div class="arch-infra-logos">
+            <img src="https://cdn.simpleicons.org/docker/2496ED" alt="Docker">
+            <img src="https://cdn.simpleicons.org/githubactions/2088FF" alt="GH Actions">
+            <img src="https://cdn.simpleicons.org/terraform/7B42BC" alt="Terraform">
+          </div>
+          <div class="arch-infra-info">
+            <div class="arch-infra-title">CI/CD и деплой</div>
+            <div class="arch-infra-sub">Docker · GitHub Actions · GHCR · Terraform · ArgoCD · k3s · Caddy</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SLIDE 5: СТЭК ========== -->
+  <section class="slide" id="s5">
+    <div class="eye">Технологии</div>
+    <h2 class="t-xl">Стэк под каждую роль</h2>
+
+    <div class="stack-sections">
+      <!-- Backend -->
+      <div class="stack-section">
+        <div class="stack-section-title">Backend</div>
+        <div class="stack-logos">
+          <div class="stack-item">
+            <img src="https://cdn.simpleicons.org/go/00ADD8" alt="Go">
+            <div class="stack-item-txt">
+              <div class="stack-item-name">Go</div>
+              <div class="stack-item-role">diasoft-gateway · быстрый публичный API</div>
+            </div>
+          </div>
+          <div class="stack-item">
+            <img src="https://cdn.simpleicons.org/spring/6DB33F" alt="Spring">
+            <div class="stack-item-txt">
+              <div class="stack-item-name">Spring Boot (Java)</div>
+              <div class="stack-item-role">diasoft-registry · бизнес-логика и реестр</div>
+            </div>
+          </div>
+          <div class="stack-item">
+            <img src="https://cdn.simpleicons.org/postgresql/4169E1" alt="PostgreSQL">
+            <div class="stack-item-txt">
+              <div class="stack-item-name">PostgreSQL</div>
+              <div class="stack-item-role">источник правды + read-model gateway</div>
+            </div>
+          </div>
+          <div class="stack-item">
+            <img src="https://cdn.simpleicons.org/redis/FF4438" alt="Redis">
+            <div class="stack-item-txt">
+              <div class="stack-item-name">Redis</div>
+              <div class="stack-item-role">кэш верификации + rate limiting</div>
+            </div>
+          </div>
+          <div class="stack-item">
+            <img src="https://cdn.simpleicons.org/apachekafka/aaaaaa" alt="Kafka">
+            <div class="stack-item-txt">
+              <div class="stack-item-name">Apache Kafka</div>
+              <div class="stack-item-role">outbox events · DLQ · replay worker</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Frontend -->
+      <div class="stack-section">
+        <div class="stack-section-title">Frontend</div>
+        <div class="stack-logos">
+          <div class="stack-item">
+            <img src="https://cdn.simpleicons.org/react/61DAFB" alt="React" class="spin">
+            <div class="stack-item-txt">
+              <div class="stack-item-name">React 19</div>
+              <div class="stack-item-role">UI · Concurrent Mode</div>
+            </div>
+          </div>
+          <div class="stack-item">
+            <img src="https://cdn.simpleicons.org/typescript/3178C6" alt="TypeScript">
+            <div class="stack-item-txt">
+              <div class="stack-item-name">TypeScript 5.9</div>
+              <div class="stack-item-role">типобезопасность от API до UI</div>
+            </div>
+          </div>
+          <div class="stack-item">
+            <img src="https://cdn.simpleicons.org/vite/646CFF" alt="Vite">
+            <div class="stack-item-txt">
+              <div class="stack-item-name">Vite 8</div>
+              <div class="stack-item-role">сборка · HMR · E2E с Playwright</div>
+            </div>
+          </div>
+          <div class="stack-item">
+            <img src="https://cdn.simpleicons.org/tailwindcss/06B6D4" alt="Tailwind">
+            <div class="stack-item-txt">
+              <div class="stack-item-name">Tailwind CSS v4</div>
+              <div class="stack-item-role">стилизация + Motion v12 анимации</div>
+            </div>
+          </div>
+          <div class="stack-item">
+            <div class="txt-logo-sm" style="background:rgba(239,68,68,0.18);color:#f87171;font-weight:900;font-size:0.38rem;">TAN</div>
+            <div class="stack-item-txt">
+              <div class="stack-item-name">TanStack</div>
+              <div class="stack-item-role">Router · Query · Table · Virtual</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Infra -->
+      <div class="stack-section">
+        <div class="stack-section-title">Инфраструктура</div>
+        <div class="stack-logos">
+          <div class="stack-item">
+            <img src="https://cdn.simpleicons.org/docker/2496ED" alt="Docker">
+            <div class="stack-item-txt">
+              <div class="stack-item-name">Docker</div>
+              <div class="stack-item-role">контейнеры · compose · GHCR</div>
+            </div>
+          </div>
+          <div class="stack-item">
+            <img src="https://cdn.simpleicons.org/kubernetes/326CE5" alt="Kubernetes">
+            <div class="stack-item-txt">
+              <div class="stack-item-name">k3s / Kubernetes</div>
+              <div class="stack-item-role">целевой рантайм · ingress-nginx</div>
+            </div>
+          </div>
+          <div class="stack-item">
+            <img src="https://cdn.simpleicons.org/githubactions/2088FF" alt="GH Actions">
+            <div class="stack-item-txt">
+              <div class="stack-item-name">GitHub Actions</div>
+              <div class="stack-item-role">CI · build · publish · promote</div>
+            </div>
+          </div>
+          <div class="stack-item">
+            <img src="https://cdn.simpleicons.org/terraform/7B42BC" alt="Terraform">
+            <div class="stack-item-txt">
+              <div class="stack-item-name">Terraform</div>
+              <div class="stack-item-role">IaC · инфраструктура как код</div>
+            </div>
+          </div>
+          <div class="stack-item">
+            <div class="txt-logo-sm" style="background:rgba(255,165,0,0.18);color:#fb923c;font-weight:900;font-size:0.38rem;">ARG</div>
+            <div class="stack-item-txt">
+              <div class="stack-item-name">ArgoCD · Caddy</div>
+              <div class="stack-item-role">GitOps деплой · HTTPS edge</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SLIDE 6: ПУТЬ ДИПЛОМА ========== -->
+  <section class="slide" id="s6">
+    <div class="eye">Жизненный цикл</div>
+    <h2 class="t-xl">Путь диплома в системе</h2>
+
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-circle" style="background:rgba(139,92,246,0.12);border-color:rgba(139,92,246,0.3);color:#a78bfa">📤</div>
+        <div class="flow-title">Загрузка</div>
+        <div class="flow-desc">ВУЗ загружает CSV / XLSX с реестром</div>
+      </div>
+      <div class="flow-arrow">›</div>
+      <div class="flow-step">
+        <div class="flow-circle" style="background:rgba(59,130,246,0.12);border-color:rgba(59,130,246,0.3);color:#60a5fa">⚙️</div>
+        <div class="flow-title">Обработка</div>
+        <div class="flow-desc">Async import worker, ошибки по строкам</div>
+      </div>
+      <div class="flow-arrow">›</div>
+      <div class="flow-step">
+        <div class="flow-circle" style="background:rgba(6,182,212,0.12);border-color:rgba(6,182,212,0.3);color:#22d3ee">📡</div>
+        <div class="flow-title">Kafka Events</div>
+        <div class="flow-desc">Outbox → Gateway consumer → read-model</div>
+      </div>
+      <div class="flow-arrow">›</div>
+      <div class="flow-step">
+        <div class="flow-circle" style="background:rgba(16,185,129,0.12);border-color:rgba(16,185,129,0.3);color:#34d399">📱</div>
+        <div class="flow-title">QR + Ссылка</div>
+        <div class="flow-desc">Студент получает QR и share-link</div>
+      </div>
+      <div class="flow-arrow">›</div>
+      <div class="flow-step">
+        <div class="flow-circle" style="background:rgba(234,179,8,0.12);border-color:rgba(234,179,8,0.3);color:#fbbf24">🔍</div>
+        <div class="flow-title">Верификация</div>
+        <div class="flow-desc">Работодатель: форма или QR-сканер</div>
+      </div>
+      <div class="flow-arrow">›</div>
+      <div class="flow-step">
+        <div class="flow-circle" style="background:rgba(239,68,68,0.12);border-color:rgba(239,68,68,0.3);color:#f87171">🚫</div>
+        <div class="flow-title">Отзыв</div>
+        <div class="flow-desc">Аннулирование с причиной, verdict = revoked</div>
+      </div>
+    </div>
+
+    <div class="flow-detail">
+      <div class="flow-detail-card" style="border-color:rgba(139,92,246,0.2)">
+        <div class="fd-title" style="color:#a78bfa">Импорт файла</div>
+        <ul class="fd-list">
+          <li>CSV / XLSX до 64 МБ</li>
+          <li>Валидация заголовков</li>
+          <li>Асинхронный jobId</li>
+          <li>Ошибки по строкам</li>
+        </ul>
+      </div>
+      <div class="flow-detail-card" style="border-color:rgba(59,130,246,0.2)">
+        <div class="fd-title" style="color:#60a5fa">Kafka Outbox</div>
+        <ul class="fd-list">
+          <li>Outbox publisher</li>
+          <li>DLQ на poison msgs</li>
+          <li>Replay worker</li>
+          <li>Student auth events</li>
+        </ul>
+      </div>
+      <div class="flow-detail-card" style="border-color:rgba(6,182,212,0.2)">
+        <div class="fd-title" style="color:#22d3ee">Gateway Cache</div>
+        <ul class="fd-list">
+          <li>Redis verification cache</li>
+          <li>Read-model projection</li>
+          <li>Rate limiting</li>
+          <li>Prometheus metrics</li>
+        </ul>
+      </div>
+      <div class="flow-detail-card" style="border-color:rgba(16,185,129,0.2)">
+        <div class="fd-title" style="color:#34d399">Share Links</div>
+        <ul class="fd-list">
+          <li>TTL 1ч / 1д / 7д / 30д</li>
+          <li>/s/{shareToken}</li>
+          <li>Отзыв в один клик</li>
+          <li>После отзыва → not_found</li>
+        </ul>
+      </div>
+      <div class="flow-detail-card" style="border-color:rgba(239,68,68,0.2)">
+        <div class="fd-title" style="color:#f87171">Вердикт</div>
+        <ul class="fd-list">
+          <li>valid</li>
+          <li>revoked + причина</li>
+          <li>expired</li>
+          <li>not_found</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SLIDE 7: ЧТО РАБОТАЕТ ========== -->
+  <section class="slide" id="s7">
+    <div class="eye">Текущее состояние</div>
+    <h2 class="t-xl">Что уже реализовано</h2>
+
+    <div class="done-grid">
+      <div class="done-card" style="border-color:rgba(139,92,246,0.2)">
+        <div class="done-head">
+          <span class="done-ico">🏛️</span>
+          <span class="done-title">Кабинет ВУЗа</span>
+        </div>
+        <ul class="done-list">
+          <li>Загрузка CSV / XLSX реестра</li>
+          <li>Async job + статус обработки</li>
+          <li>Ошибки по конкретным строкам</li>
+          <li>Список дипломов с поиском</li>
+          <li>Аннулирование с причиной</li>
+          <li>QR-код для каждого диплома</li>
+        </ul>
+      </div>
+
+      <div class="done-card" style="border-color:rgba(59,130,246,0.2)">
+        <div class="done-head">
+          <span class="done-ico">🎓</span>
+          <span class="done-title">Кабинет студента</span>
+        </div>
+        <ul class="done-list">
+          <li>Просмотр своего диплома</li>
+          <li>QR-код и verification token</li>
+          <li>Создание share-link с TTL</li>
+          <li>Отзыв share-link</li>
+          <li>Автоматическое создание аккаунта из импорта</li>
+          <li>Логин по номеру диплома</li>
+        </ul>
+      </div>
+
+      <div class="done-card" style="border-color:rgba(16,185,129,0.2)">
+        <div class="done-head">
+          <span class="done-ico">🔍</span>
+          <span class="done-title">Публичная проверка</span>
+        </div>
+        <ul class="done-list">
+          <li>Форма: номер + код ВУЗа</li>
+          <li>Прямая ссылка /v/{token}</li>
+          <li>Share-ссылка /s/{token}</li>
+          <li>QR-сканер в HR-портале</li>
+          <li>ФИО маскируется (И*** И***)</li>
+          <li>Без авторизации</li>
+        </ul>
+      </div>
+
+      <div class="done-card" style="border-color:rgba(6,182,212,0.2)">
+        <div class="done-head">
+          <span class="done-ico">⚙️</span>
+          <span class="done-title">diasoft-registry</span>
+        </div>
+        <ul class="done-list">
+          <li>Spring Boot + Flyway migrations</li>
+          <li>Async import worker (CSV + XLSX)</li>
+          <li>Outbox → Kafka publisher</li>
+          <li>SHA-256 record_hash</li>
+          <li>revoked_at + revoke_reason</li>
+          <li>JWT-scoped ownership enforcement</li>
+        </ul>
+      </div>
+
+      <div class="done-card" style="border-color:rgba(0,173,216,0.2)">
+        <div class="done-head">
+          <span class="done-ico">🚀</span>
+          <span class="done-title">diasoft-gateway</span>
+        </div>
+        <ul class="done-list">
+          <li>3 бинарника: gateway + consumer + dlq-replayer</li>
+          <li>Redis cache + rate limiting</li>
+          <li>OpenTelemetry tracing</li>
+          <li>Prometheus metrics</li>
+          <li>Self-hosted Swagger UI</li>
+          <li>Trusted-proxy IP resolution</li>
+        </ul>
+      </div>
+
+      <div class="done-card" style="border-color:rgba(59,130,246,0.2)">
+        <div class="done-head">
+          <span class="done-ico">🌐</span>
+          <span class="done-title">Деплой · Live</span>
+        </div>
+        <ul class="done-list">
+          <li>Сервер за Caddy + HTTPS</li>
+          <li>Проверены 10k-строчные CSV</li>
+          <li>Цель: diplomverify.ru + edu-proof.ru</li>
+          <li>target: k3s + ingress-nginx + ArgoCD</li>
+          <li>Multi-tenant: team1 + team2</li>
+          <li>Seed: ITMO, BMSTU, MSU</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SLIDE 8: МАСШТАБ ========== -->
+  <section class="slide" id="s8">
+    <div class="eye">Масштабирование</div>
+    <h2 class="t-xl">Спроектировано на рост<br><span class="grad2">до 3 млн дипломов</span></h2>
+
+    <div class="scale-numbers">
+      <div class="scale-num-card">
+        <div class="scale-num" style="color:#a78bfa">3M+</div>
+        <div class="scale-label">дипломов<br>целевая ёмкость</div>
+      </div>
+      <div class="scale-num-card">
+        <div class="scale-num" style="color:#60a5fa">10K</div>
+        <div class="scale-label">строк в одном<br>CSV файле — live</div>
+      </div>
+      <div class="scale-num-card">
+        <div class="scale-num" style="color:#34d399">64MB</div>
+        <div class="scale-label">максимальный<br>размер импорта</div>
+      </div>
+      <div class="scale-num-card">
+        <div class="scale-num" style="color:#fbbf24">800K</div>
+        <div class="scale-label">дипломов/неделю<br>production план</div>
+      </div>
+    </div>
+
+    <div class="scale-arch">
+      <div class="scale-detail">
+        <div class="sd-title">Как достигаем масштаба</div>
+        <ul class="sd-list">
+          <li>Публичная проверка отделена от реестра — нагрузки не пересекаются</li>
+          <li>Redis кэш на горячих верификациях — без поиска по всей базе</li>
+          <li>Kafka outbox — registry и gateway общаются асинхронно</li>
+          <li>Async import worker — большие файлы обрабатываются по частям</li>
+        </ul>
+      </div>
+      <div class="scale-detail">
+        <div class="sd-title">Production roadmap (следующий этап)</div>
+        <ul class="sd-list">
+          <li>Session-based upload: браузер → S3 напрямую (presigned URL)</li>
+          <li>Normalizer + parallel chunk-workers вместо одного воркера</li>
+          <li>PostgreSQL partitioning для таблиц дипломов и импортов</li>
+          <li>Signed QR — цифровая подпись ВУЗа вместо read-model lookup</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SLIDE 9: ДОВЕРИЕ ========== -->
+  <section class="slide" id="s9">
+    <div class="eye">Модель доверия</div>
+    <h2 class="t-xl">От lookup к цифровой подписи</h2>
+
+    <div class="trust-grid">
+      <div class="trust-col">
+        <div class="trust-col-head" style="color:#666">Сейчас · Working</div>
+        <div class="trust-card">
+          <div class="trust-card-title">📋 Проверка по read-model</div>
+          <div class="trust-card-desc">Gateway нормализует запрос → проверяет Redis кэш → смотрит в verification_records (PostgreSQL projection из Kafka). Быстро, работает прямо сейчас.</div>
+        </div>
+        <div class="trust-card">
+          <div class="trust-card-title">✅ SHA-256 record_hash</div>
+          <div class="trust-card-desc">Реестр вычисляет и хранит детерминированный хэш полей диплома. Используется для аудита и integrity-проверок. Хранится в source-of-truth и в Kafka событиях.</div>
+        </div>
+        <div class="trust-card">
+          <div class="trust-card-title">🚫 Отзыв работает сейчас</div>
+          <div class="trust-card-desc">После revoke через кабинет ВУЗа — статус обновляется в реестре, событие уходит в Kafka, gateway projection обновляется, публичная проверка возвращает verdict=revoked.</div>
+        </div>
+      </div>
+
+      <div class="trust-divider">
+        <div class="trust-arrow">→</div>
+        <div class="trust-arrow-lbl">Roadmap</div>
+      </div>
+
+      <div class="trust-col">
+        <div class="trust-col-head" style="color:#8b5cf6">Цель · Signed QR</div>
+        <div class="trust-card target">
+          <div class="trust-card-title">🔐 Цифровая подпись ВУЗа</div>
+          <div class="trust-card-desc">QR содержит подписанный payload диплома. Подпись верифицируется публичным ключом ВУЗа — аутентичность не зависит от read-model.</div>
+        </div>
+        <div class="trust-card target">
+          <div class="trust-card-title">⚡ Один indexed lookup</div>
+          <div class="trust-card-desc">После проверки подписи — один быстрый запрос по ключу для актуального статуса (отозван / не отозван). Работает на 3M+ дипломах без деградации.</div>
+        </div>
+        <div class="trust-card target">
+          <div class="trust-card-title">🛡️ Защита от подделки</div>
+          <div class="trust-card-desc">Данные диплома нельзя изменить без private key ВУЗа. Скомпрометированный read-model не может создать "валидный" диплом.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SLIDE 10: ДЕМО ========== -->
+  <section class="slide" id="s10">
+    <div class="eye">Демонстрация</div>
+    <div class="grid2">
+      <div>
+        <h2 class="t-xl">Полный путь<br>диплома — live</h2>
+        <p class="sub" style="margin-top: 1rem;">Показываем все три роли в реальной системе, развёрнутой на сервере.</p>
+        <div class="demo-url">🌐 web.team1.213.165.211.103.sslip.io</div>
+        <div style="margin-top: 0.875rem; font-size: 0.72rem; color: #333;">
+          Цель: diplomverify.ru · edu-proof.ru
+        </div>
+      </div>
+      <div class="demo-flow">
+        <div class="demo-step">
+          <div class="demo-step-num" style="background:rgba(139,92,246,0.15);color:#a78bfa">1</div>
+          <div>
+            <div class="demo-step-title">ВУЗ загружает реестр дипломов</div>
+            <div class="demo-step-desc">CSV файл → система принимает (202), обрабатывает асинхронно, показывает ошибки по строкам</div>
+          </div>
+        </div>
+        <div class="demo-step">
+          <div class="demo-step-num" style="background:rgba(59,130,246,0.15);color:#60a5fa">2</div>
+          <div>
+            <div class="demo-step-title">Студент открывает диплом и получает ссылку</div>
+            <div class="demo-step-desc">QR-код, временная share-ссылка для работодателя, управление TTL</div>
+          </div>
+        </div>
+        <div class="demo-step">
+          <div class="demo-step-num" style="background:rgba(16,185,129,0.15);color:#34d399">3</div>
+          <div>
+            <div class="demo-step-title">Работодатель проверяет диплом</div>
+            <div class="demo-step-desc">Форма с номером диплома → verdict valid. Или QR-сканер в HR-портале</div>
+          </div>
+        </div>
+        <div class="demo-step">
+          <div class="demo-step-num" style="background:rgba(239,68,68,0.15);color:#f87171">4</div>
+          <div>
+            <div class="demo-step-title">ВУЗ аннулирует диплом</div>
+            <div class="demo-step-desc">После отзыва — та же проверка возвращает verdict revoked. Мгновенно.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SLIDE 11: ИТОГ ========== -->
+  <section class="slide" id="s11">
+    <div class="final-wrap">
+      <div>
+        <div class="eye">Итог</div>
+        <h2 class="t-hero">
+          input<br><span class="grad">math</span>
+        </h2>
+        <p class="sub" style="margin-top: 1.25rem; max-width: 420px;">
+          Мы сделали не набор экранов — а работающую систему с правильной архитектурой и запасом на рост.
+        </p>
+      </div>
+
+      <div>
+        <ul class="result-list">
+          <li>
+            <span class="r-icon">✅</span>
+            <div><strong>Система живая</strong> — развёрнута и доступна по HTTPS прямо сейчас</div>
+          </li>
+          <li>
+            <span class="r-icon">🏗️</span>
+            <div><strong>4 репозитория</strong> — gateway, registry, front, infra работают вместе</div>
+          </li>
+          <li>
+            <span class="r-icon">⚡</span>
+            <div><strong>10K дипломов в одном CSV</strong> — загрузка подтверждена в бою</div>
+          </li>
+          <li>
+            <span class="r-icon">🔄</span>
+            <div><strong>Event-driven архитектура</strong> — Kafka outbox, DLQ, replay worker</div>
+          </li>
+          <li>
+            <span class="r-icon">📈</span>
+            <div><strong>Запас на 3M дипломов</strong> — публичный контур изолирован от реестра</div>
+          </li>
+          <li>
+            <span class="r-icon">🔮</span>
+            <div><strong>Roadmap заложен</strong> — signed QR, session uploads, partitioning</div>
+          </li>
+        </ul>
+
+        <div class="final-repo-grid" style="margin-top: 1.75rem;">
+          <div class="repo-item">
+            <img src="https://cdn.simpleicons.org/go/00ADD8" alt="Go">
+            <div><div class="repo-item-name">diasoft-gateway</div><div class="repo-item-lang">Go</div></div>
+          </div>
+          <div class="repo-item">
+            <img src="https://cdn.simpleicons.org/spring/6DB33F" alt="Spring">
+            <div><div class="repo-item-name">diasoft-registry</div><div class="repo-item-lang">Java · Spring Boot</div></div>
+          </div>
+          <div class="repo-item">
+            <img src="https://cdn.simpleicons.org/react/61DAFB" alt="React">
+            <div><div class="repo-item-name">diasoft-front</div><div class="repo-item-lang">React · TypeScript</div></div>
+          </div>
+          <div class="repo-item">
+            <img src="https://cdn.simpleicons.org/kubernetes/326CE5" alt="K8s">
+            <div><div class="repo-item-name">platform-infra</div><div class="repo-item-lang">Terraform · Helm · ArgoCD</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- Nav -->
+<div class="nav" id="navEl"></div>
+<div class="counter" id="counterEl">1 / 11</div>
+<div class="hint">← → Space</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const navEl = document.getElementById('navEl');
+  const counterEl = document.getElementById('counterEl');
+  const total = slides.length;
+  let cur = 0;
+
+  slides.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.addEventListener('click', () => go(i));
+    navEl.appendChild(d);
+  });
+
+  function updateUI() {
+    document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === cur));
+    counterEl.textContent = `${cur + 1} / ${total}`;
+  }
+
+  function go(idx) {
+    const prev = slides[cur];
+    prev.classList.remove('active');
+    prev.classList.add('exit');
+    setTimeout(() => prev.classList.remove('exit'), 300);
+    cur = ((idx % total) + total) % total;
+    slides[cur].classList.add('active');
+    updateUI();
+  }
+
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight','ArrowDown',' '].includes(e.key)) { e.preventDefault(); go(cur + 1); }
+    if (['ArrowLeft','ArrowUp'].includes(e.key)) { e.preventDefault(); go(cur - 1); }
+  });
+
+  let tx = 0;
+  document.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', e => {
+    const d = tx - e.changedTouches[0].clientX;
+    if (Math.abs(d) > 40) d > 0 ? go(cur + 1) : go(cur - 1);
+  });
+</script>
+</body>
+</html>
