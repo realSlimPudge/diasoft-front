@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Upload, FileSpreadsheet, Loader2, CheckCircle2, XCircle, Clock } from 'lucide-react'
+import { Upload, FileSpreadsheet, Loader2, CheckCircle2, XCircle, Clock, Download } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/shared/components/ui/button'
 import { Alert, AlertDescription } from '@/shared/components/ui/alert'
@@ -83,6 +83,16 @@ export function CsvUploader() {
 
   const isDone = job && TERMINAL.has(job.status)
 
+  const downloadTemplate = () => {
+    const header = 'student_external_id,full_name,diploma_number,program_name'
+    const blob = new Blob([header + '\n'], { type: 'text/csv;charset=utf-8;' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = 'diplomas-template.csv'
+    a.click()
+    URL.revokeObjectURL(a.href)
+  }
+
   return (
     <div className="flex flex-col gap-4">
       {/* Drop zone */}
@@ -106,7 +116,7 @@ export function CsvUploader() {
             <p className="mt-1 text-sm text-muted-foreground">
               {file
                 ? `${(file.size / 1024).toFixed(1)} KB`
-                : 'Поддерживаются .csv и .xlsx — ФИО, год, специальность, номер диплома'}
+                : 'Поддерживается .csv — скачайте шаблон ниже'}
             </p>
           </div>
         </div>
@@ -197,12 +207,23 @@ export function CsvUploader() {
         </Alert>
       )}
 
-      {/* Format hint */}
+      {/* Format hint + template download */}
       {!jobId && (
-        <div className="bg-muted/50 p-3">
-          <p className="mb-1 text-xs font-medium text-foreground">Формат CSV/Excel:</p>
-          <p className="font-mono text-xs text-muted-foreground">ФИО, номер_диплома, специальность, год_выпуска</p>
-          <p className="mt-1 text-xs text-muted-foreground">Первая строка — заголовки, разделитель — запятая или точка с запятой</p>
+        <div className="flex items-start justify-between gap-4 bg-muted/50 p-3">
+          <div>
+            <p className="mb-1.5 text-xs font-medium text-foreground">Формат CSV:</p>
+            <p className="font-mono text-[11px] text-muted-foreground">
+              student_external_id, full_name, diploma_number, program_name
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={downloadTemplate}
+            className="flex shrink-0 items-center gap-1.5 font-mono text-[9px] tracking-widest text-muted-foreground/60 uppercase transition-colors hover:text-primary"
+          >
+            <Download size={11} />
+            Шаблон
+          </button>
         </div>
       )}
     </div>

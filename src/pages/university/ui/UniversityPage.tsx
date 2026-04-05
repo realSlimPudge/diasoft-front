@@ -4,11 +4,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui
 import { CsvUploader } from '@/features/university-upload/ui/CsvUploader'
 import { DiplomasTable } from '@/features/university-diplomas/ui/DiplomasTable'
 import { useAuth } from '@/entities/auth/lib/use-auth'
-import { useRouter } from '@tanstack/react-router'
 
 export function UniversityPage() {
-  const { user, logout } = useAuth()
-  const router = useRouter()
+  const { user } = useAuth()
 
   return (
     <div className="relative mx-auto w-full max-w-6xl px-6 py-12">
@@ -38,12 +36,6 @@ export function UniversityPage() {
             </p>
           )}
         </div>
-        <button
-          onClick={() => { logout(); router.navigate({ to: '/login' }) }}
-          className="font-mono text-[10px] tracking-widest text-muted-foreground/50 uppercase transition-colors hover:text-muted-foreground"
-        >
-          Выйти
-        </button>
       </motion.div>
 
       {/* Tabs */}
@@ -53,19 +45,13 @@ export function UniversityPage() {
         transition={{ delay: 0.15, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       >
         <Tabs defaultValue="diplomas">
-          <TabsList className="mb-8 gap-0 rounded-none border border-border/40 bg-transparent p-0">
-            <TabsTrigger
-              value="diplomas"
-              className="rounded-none border-r border-border/40 px-6 py-2.5 font-mono text-[10px] tracking-widest uppercase data-[state=active]:bg-primary/10 data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground"
-            >
-              <List size={12} className="mr-2" />
+          <TabsList className="mb-8">
+            <TabsTrigger value="diplomas">
+              <List size={13} />
               Реестр
             </TabsTrigger>
-            <TabsTrigger
-              value="upload"
-              className="rounded-none px-6 py-2.5 font-mono text-[10px] tracking-widest uppercase data-[state=active]:bg-primary/10 data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground"
-            >
-              <Upload size={12} className="mr-2" />
+            <TabsTrigger value="upload">
+              <Upload size={13} />
               Загрузить
             </TabsTrigger>
           </TabsList>

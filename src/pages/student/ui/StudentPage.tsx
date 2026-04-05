@@ -6,11 +6,9 @@ import { DiplomaQrCard } from '@/features/student-qr/ui/DiplomaQrCard'
 import { ShareLinkGenerator } from '@/features/student-share/ui/ShareLinkGenerator'
 import { studentApi } from '@/entities/student-diploma/api/student.api'
 import { useAuth } from '@/entities/auth/lib/use-auth'
-import { useRouter } from '@tanstack/react-router'
 
 export function StudentPage() {
-  const { user, logout } = useAuth()
-  const router = useRouter()
+  const { user } = useAuth()
 
   const { data: diploma, isPending, isError, error } = useQuery({
     queryKey: ['student', 'diploma'],
@@ -44,12 +42,6 @@ export function StudentPage() {
             <p className="mt-2 font-mono text-xs text-muted-foreground/60">{user.name}</p>
           )}
         </div>
-        <button
-          onClick={() => { logout(); router.navigate({ to: '/login' }) }}
-          className="font-mono text-[10px] tracking-widest text-muted-foreground/50 uppercase transition-colors hover:text-muted-foreground"
-        >
-          Выйти
-        </button>
       </motion.div>
 
       {/* Content */}

@@ -4,11 +4,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui
 import { QrScanner } from '@/features/hr-scanner/ui/QrScanner'
 import { VerifyForm } from '@/features/verify-by-form/ui/VerifyForm'
 import { useAuth } from '@/entities/auth/lib/use-auth'
-import { useRouter } from '@tanstack/react-router'
 
 export function HrPage() {
-  const { user, logout } = useAuth()
-  const router = useRouter()
+  const { user } = useAuth()
 
   return (
     <div className="relative mx-auto w-full max-w-3xl px-6 py-12">
@@ -36,12 +34,6 @@ export function HrPage() {
             <p className="mt-2 font-mono text-xs text-muted-foreground/60">{user.name}</p>
           )}
         </div>
-        <button
-          onClick={() => { logout(); router.navigate({ to: '/login' }) }}
-          className="font-mono text-[10px] tracking-widest text-muted-foreground/50 uppercase transition-colors hover:text-muted-foreground"
-        >
-          Выйти
-        </button>
       </motion.div>
 
       {/* Tabs */}
@@ -51,19 +43,13 @@ export function HrPage() {
         transition={{ delay: 0.15, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       >
         <Tabs defaultValue="manual">
-          <TabsList className="mb-8 gap-0 rounded-none border border-border/40 bg-transparent p-0">
-            <TabsTrigger
-              value="manual"
-              className="rounded-none border-r border-border/40 px-6 py-2.5 font-mono text-[10px] tracking-widest uppercase data-[state=active]:bg-primary/10 data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground"
-            >
-              <Search size={12} className="mr-2" />
+          <TabsList className="mb-8">
+            <TabsTrigger value="manual">
+              <Search size={13} />
               По номеру
             </TabsTrigger>
-            <TabsTrigger
-              value="scan"
-              className="rounded-none px-6 py-2.5 font-mono text-[10px] tracking-widest uppercase data-[state=active]:bg-primary/10 data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground"
-            >
-              <ScanLine size={12} className="mr-2" />
+            <TabsTrigger value="scan">
+              <ScanLine size={13} />
               QR-код
             </TabsTrigger>
           </TabsList>
